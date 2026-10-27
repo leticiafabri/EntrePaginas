@@ -125,7 +125,7 @@ A autenticação é local ao aplicativo e não representa uma conta hospedada em
 
 ## Contexto acadêmico
 
-Projeto desenvolvido para a disciplina de **React Native**, com foco na construção de uma aplicação mobile, consumo de API, navegação entre telas, gerenciamento de estado, persistência local e experiência de usuário.
+Projeto desenvolvido para a disciplina de **Mobile Development: Framework**, com foco na construção de uma aplicação mobile, consumo de API, navegação entre telas, gerenciamento de estado, persistência local e experiência de usuário.
 
 ---
 
