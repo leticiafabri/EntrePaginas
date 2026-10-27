@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -78,13 +79,18 @@ export default function RegisterScreen({ navigation }: Props) {
           <Text style={styles.backText}>‹ Voltar para o login</Text>
         </TouchableOpacity>
 
-        <View style={styles.logoContainer}>
-          <Text style={styles.logo}>EntrePáginas</Text>
+       <View style={styles.logoContainer}>
+<Image
+  source={require("../../assets/images/logo_entrepaginas_horizontal.png")}
+  style={styles.logoImage}
+  resizeMode="contain"
+  accessibilityLabel="Logo EntrePáginas"
+/>
 
-          <Text style={styles.subtitle}>
-            Seu espaço para acompanhar cada leitura.
-          </Text>
-        </View>
+  <Text style={styles.subtitle}>
+    Seu espaço para acompanhar cada leitura.
+  </Text>
+</View>
 
         <View style={styles.card}>
           <Text style={styles.title}>Crie sua conta</Text>
@@ -199,7 +205,7 @@ export default function RegisterScreen({ navigation }: Props) {
         </View>
 
         <Text style={styles.footer}>
-          Cada livro, uma nova história. ♡
+          Cada livro, uma nova história. 
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -211,6 +217,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8F1E7",
   },
+logoImage: {
+  width: 280,
+  height: 90,
+  alignSelf: "center",
+  marginBottom: 8,
+},
   content: {
     flexGrow: 1,
     justifyContent: "center",

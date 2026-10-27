@@ -28,7 +28,10 @@ function openBookDetails(bookId: string) {
   activeOpacity={0.8}
   onPress={() => openBookDetails(item.id)}
   accessibilityRole="button"
-  accessibilityLabel={`Ver detalhes de ${item.title}`}
+accessibilityLabel={`Ver detalhes de ${item.title}. Autor: ${
+  item.authors.join(", ") || "Autor não informado"
+}`}
+accessibilityHint="Abre a página com mais informações sobre este livro"
 >
         {item.coverUrl ? (
           <Image
@@ -57,7 +60,9 @@ function openBookDetails(bookId: string) {
   void toggleFavorite(item);
 }}
             accessibilityRole="button"
-            accessibilityLabel={`Remover ${item.title} dos favoritos`}
+accessibilityLabel={`Remover ${item.title} dos favoritos`}
+accessibilityHint="Remove este livro da sua lista de favoritos"
+hitSlop={4}
           >
             <Text style={styles.removeButtonText}>
               ♥ Remover dos favoritos
@@ -171,14 +176,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
   },
-  removeButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#702D3A",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginTop: 12,
-  },
+removeButton: {
+  alignSelf: "flex-start",
+  backgroundColor: "#702D3A",
+  borderRadius: 8,
+  paddingHorizontal: 10,
+  paddingVertical: 8,
+  marginTop: 12,
+  minHeight: 44,
+  justifyContent: "center",
+},
   removeButtonText: {
     color: "#FFFFFF",
     fontSize: 12,

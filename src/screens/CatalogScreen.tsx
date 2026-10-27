@@ -181,6 +181,7 @@ export default function CatalogScreen() {
             onPress={() => void loadMoreBooks()}
             accessibilityRole="button"
             accessibilityLabel="Tentar carregar mais livros novamente"
+            accessibilityHint="Repete a pesquisa para tentar carregar os livros"
           >
             <Text style={styles.searchButtonText}>Tentar novamente</Text>
           </TouchableOpacity>
@@ -212,17 +213,23 @@ export default function CatalogScreen() {
           returnKeyType="search"
           onSubmitEditing={() => void loadBooks(query)}
           editable={!loading && !refreshing}
+          accessibilityHint="Digite o título ou nome do autor e pressione Buscar"
         />
 
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={() => void loadBooks(query)}
-          accessibilityRole="button"
-          accessibilityLabel="Buscar livros"
-          disabled={loading || refreshing}
-        >
-          <Text style={styles.searchButtonText}>Buscar</Text>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={styles.searchButton}
+  onPress={() => void loadBooks(query)}
+  accessibilityRole="button"
+  accessibilityLabel="Buscar livros"
+  accessibilityHint="Pesquisa livros pelo título ou autor informado"
+  accessibilityState={{
+    disabled: loading || refreshing,
+    busy: loading,
+  }}
+  disabled={loading || refreshing}
+>
+  <Text style={styles.searchButtonText}>Buscar</Text>
+</TouchableOpacity>
       </View>
 
       {loading ? (
@@ -242,6 +249,7 @@ export default function CatalogScreen() {
               onPress={() => void loadBooks(activeQuery)}
               accessibilityRole="button"
               accessibilityLabel="Tentar carregar os livros novamente"
+              accessibilityHint="Tenta carregar a próxima página de livros"
             >
               <Text style={styles.searchButtonText}>Tentar novamente</Text>
             </TouchableOpacity>
@@ -310,6 +318,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     color: "#352A2C",
     fontSize: 15,
+    minHeight: 44,
   },
   searchButton: {
     backgroundColor: "#702D3A",
@@ -317,6 +326,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     justifyContent: "center",
     alignItems: "center",
+    minWidth: 70,
+    minHeight: 44,
+    paddingVertical: 8,
   },
   searchButtonText: {
     color: "#FFFFFF",
@@ -355,6 +367,8 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 16,
     alignItems: "center",
+    minHeight: 44,
+justifyContent: "center",
   },
   footerLoader: {
     paddingVertical: 20,

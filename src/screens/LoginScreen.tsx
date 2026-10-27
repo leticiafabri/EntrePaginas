@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -53,8 +54,14 @@ export default function LoginScreen({ navigation }: Props) {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
+<Image
+  source={require("../../assets/images/logo_entrepaginas.png")}
+  style={styles.logoImage}
+  resizeMode="contain"
+  accessibilityLabel="Logo EntrePáginas"
+/>
+
         <View style={styles.logoContainer}>
-          <Text style={styles.logo}>EntrePáginas</Text>
 
           <Text style={styles.subtitle}>
             Um lugar para registrar suas leituras.
@@ -146,6 +153,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F8F1E7",
   },
+logoImage: {
+  width: 260,
+  height: 260,
+  alignSelf: "center",
+  marginBottom: 15,
+},
   content: {
     flexGrow: 1,
     justifyContent: "center",
@@ -156,12 +169,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 32,
   },
-  logo: {
-    fontSize: 34,
-    fontWeight: "bold",
-    color: "#702D3A",
-    letterSpacing: -1,
-  },
+logoText: {
+  fontSize: 34,
+  fontWeight: "bold",
+  color: "#702D3A",
+  letterSpacing: -1,
+},
   subtitle: {
     fontSize: 14,
     color: "#66545A",

@@ -27,8 +27,8 @@ export default function ReadBooksScreen({ navigation }: Props) {
   const { readBooks, isLoading } = useReadBooks();
 
   function openBookDetails(book: Book) {
-    navigation.navigate("BookDetails", { book });
-  }
+  navigation.navigate("BookDetails", { bookId: book.id });
+}
 
   if (isLoading) {
     return (
@@ -70,10 +70,15 @@ export default function ReadBooksScreen({ navigation }: Props) {
       }
       renderItem={({ item }) => (
         <TouchableOpacity
-          style={styles.card}
-          activeOpacity={0.8}
-          onPress={() => openBookDetails(item.book)}
-        >
+  style={styles.card}
+  activeOpacity={0.8}
+  onPress={() => openBookDetails(item.book)}
+  accessibilityRole="button"
+  accessibilityLabel={`Ver detalhes de ${item.book.title}. Autor: ${
+    item.book.authors.join(", ") || "Autor não informado"
+  }. Avaliação: ${item.rating} de 5 estrelas. Livro lido.`}
+  accessibilityHint="Abre os detalhes do livro para consultar suas informações e alterar a avaliação"
+>
           {item.book.coverUrl ? (
             <Image
               source={{ uri: item.book.coverUrl }}
@@ -99,21 +104,27 @@ export default function ReadBooksScreen({ navigation }: Props) {
             </Text>
 
             <View style={styles.ratingContainer}>
-              <View style={styles.stars}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Text
-                    key={star}
-                    style={[
-                      styles.star,
-                      star <= item.rating
-                        ? styles.filledStar
-                        : styles.emptyStar,
-                    ]}
-                  >
-                    ★
-                  </Text>
-                ))}
-              </View>
+              <View
+  style={styles.stars}
+  accessible
+  accessibilityRole="text"
+  accessibilityLabel={`Avaliação: ${item.rating} de 5 estrelas`}
+>
+  {[1, 2, 3, 4, 5].map((star) => (
+    <Text
+      key={star}
+      style={[
+        styles.star,
+        star <= item.rating
+          ? styles.filledStar
+          : styles.emptyStar,
+      ]}
+      accessible={false}
+    >
+      ★
+    </Text>
+  ))}
+</View>
 
               <Text style={styles.ratingText}>
                 {item.rating}/5
@@ -176,16 +187,17 @@ const styles = StyleSheet.create({
     color: "#66545A",
     marginTop: 5,
   },
-  card: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#E8DCD3",
-    elevation: 2,
-  },
+card: {
+  flexDirection: "row",
+  backgroundColor: "#FFFFFF",
+  borderRadius: 14,
+  padding: 12,
+  marginBottom: 14,
+  borderWidth: 1,
+  borderColor: "#E8DCD3",
+  elevation: 2,
+  minHeight: 44,
+},
   cover: {
     width: 95,
     height: 140,
