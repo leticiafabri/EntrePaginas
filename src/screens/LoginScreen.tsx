@@ -61,7 +61,7 @@ export default function LoginScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>Bem-vinda de volta!</Text>
+          <Text style={styles.title}>Bem-vindo de volta!</Text>
           <Text style={styles.description}>
             Entre na sua conta para continuar.
           </Text>
@@ -111,7 +111,7 @@ export default function LoginScreen({ navigation }: Props) {
           </View>
         </View>
 
-        <Text style={styles.footer}>Sua próxima leitura começa aqui. ♡</Text>
+        <Text style={styles.footer}>Sua próxima leitura começa aqui. </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

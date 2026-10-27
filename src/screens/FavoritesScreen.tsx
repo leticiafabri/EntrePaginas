@@ -60,7 +60,7 @@ export default function FavoritesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Meus favoritos ❤️</Text>
+      <Text style={styles.heading}>Meus favoritos </Text>
 
       <Text style={styles.subtitle}>
         Seus livros especiais, reunidos em um só lugar.

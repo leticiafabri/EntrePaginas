@@ -9,8 +9,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { Book } from "../types/Book";
-
-const STORAGE_KEY = "@entrepaginas:readBooks";
+import { useAuth } from "./AuthContext";
 
 export interface ReadBook {
   book: Book;
@@ -37,27 +36,48 @@ interface ReadBooksProviderProps {
 export function ReadBooksProvider({
   children,
 }: ReadBooksProviderProps) {
+  const { user } = useAuth();
+
   const [readBooks, setReadBooks] = useState<ReadBook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadReadBooks() {
-      try {
-        const storedBooks = await AsyncStorage.getItem(STORAGE_KEY);
+  const storageKey = user
+    ? `@entrepaginas:readBooks:${user.id}`
+    : null;
 
-        if (storedBooks) {
-          const parsedBooks: ReadBook[] = JSON.parse(storedBooks);
-          setReadBooks(parsedBooks);
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadReadBooks() {
+      setIsLoading(true);
+      setReadBooks([]);
+
+      if (!storageKey) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const storedBooks = await AsyncStorage.getItem(storageKey);
+
+        if (isActive && storedBooks) {
+          setReadBooks(JSON.parse(storedBooks) as ReadBook[]);
         }
       } catch (error) {
         console.error("Erro ao carregar livros lidos:", error);
       } finally {
-        setIsLoading(false);
+        if (isActive) {
+          setIsLoading(false);
+        }
       }
     }
 
     void loadReadBooks();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [storageKey]);
 
   const isRead = useCallback(
     (bookId: string) =>
@@ -73,46 +93,49 @@ export function ReadBooksProvider({
 
   const markAsRead = useCallback(
     async (book: Book, rating: number) => {
-      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-        throw new Error("A nota deve ser um número inteiro de 1 a 5.");
-      }
+      if (!storageKey) return;
 
-      const existing = readBooks.find(
-        (item) => item.book.id === book.id,
-      );
-
-      const updatedBooks: ReadBook[] = existing
-        ? readBooks.map((item) =>
-            item.book.id === book.id
-              ? { book, rating }
-              : item,
-          )
-        : [...readBooks, { book, rating }];
-
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(updatedBooks),
-      );
+      const updatedBooks = [
+        ...readBooks.filter((item) => item.book.id !== book.id),
+        { book, rating },
+      ];
 
       setReadBooks(updatedBooks);
+
+      try {
+        await AsyncStorage.setItem(
+          storageKey,
+          JSON.stringify(updatedBooks),
+        );
+      } catch (error) {
+        console.error("Erro ao salvar livro lido:", error);
+        setReadBooks(readBooks);
+      }
     },
-    [readBooks],
+    [readBooks, storageKey],
   );
 
   const removeReadBook = useCallback(
     async (bookId: string) => {
+      if (!storageKey) return;
+
       const updatedBooks = readBooks.filter(
         (item) => item.book.id !== bookId,
       );
 
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(updatedBooks),
-      );
-
       setReadBooks(updatedBooks);
+
+      try {
+        await AsyncStorage.setItem(
+          storageKey,
+          JSON.stringify(updatedBooks),
+        );
+      } catch (error) {
+        console.error("Erro ao remover livro lido:", error);
+        setReadBooks(readBooks);
+      }
     },
-    [readBooks],
+    [readBooks, storageKey],
   );
 
   return (

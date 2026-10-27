@@ -1,8 +1,9 @@
-import { useEffect } from "react";
 import {
   ActivityIndicator,
+  Alert,
   View,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import {
   NavigationContainer,
@@ -13,10 +14,10 @@ import {
 import {
   createBottomTabNavigator,
 } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "../contexts/AuthContext";
 import { Book } from "../types/Book";
-import { Ionicons } from "@expo/vector-icons";
 
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
@@ -42,54 +43,97 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
+  const { signOut } = useAuth();
+
+  function confirmLogout() {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza de que deseja sair do EntrePáginas?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch {
+              Alert.alert(
+                "Erro",
+                "Não foi possível sair da conta. Tente novamente.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-  headerStyle: {
-    backgroundColor: "#702D3A",
-  },
-  headerTintColor: "#FFFFFF",
-  headerTitleStyle: {
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  tabBarActiveTintColor: "#702D3A",
-  tabBarInactiveTintColor: "#A39498",
-  tabBarStyle: {
-    backgroundColor: "#FFFFFF",
-    borderTopColor: "#E8DCD3",
-    borderTopWidth: 1,
-    height: 85,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  tabBarLabelStyle: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  tabBarIcon: ({ focused, color, size }) => {
-    let iconName: React.ComponentProps<typeof Ionicons>["name"];
+        headerStyle: {
+          backgroundColor: "#702D3A",
+        },
+        headerTintColor: "#FFFFFF",
+        headerTitleStyle: {
+          fontWeight: "bold",
+          fontSize: 20,
+        },
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={confirmLogout}
+            accessibilityRole="button"
+            accessibilityLabel="Sair da conta"
+            style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+          >
+            <Ionicons
+              name="log-out-outline"
+              size={25}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
+        ),
+        tabBarActiveTintColor: "#702D3A",
+        tabBarInactiveTintColor: "#A39498",
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E8DCD3",
+          borderTopWidth: 1,
+          height: 85,
+          paddingTop: 8,
+          paddingBottom: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: React.ComponentProps<typeof Ionicons>["name"];
 
-    if (route.name === "Início") {
-      iconName = focused ? "book" : "book-outline";
-    } else if (route.name === "Favoritos") {
-      iconName = focused ? "heart" : "heart-outline";
-    } else {
-      iconName = focused ? "bookmark" : "bookmark-outline";
-    }
+          if (route.name === "Início") {
+            iconName = focused ? "book" : "book-outline";
+          } else if (route.name === "Favoritos") {
+            iconName = focused ? "heart" : "heart-outline";
+          } else {
+            iconName = focused ? "bookmark" : "bookmark-outline";
+          }
 
-    return (
-      <Ionicons
-        name={iconName}
-        size={size}
-        color={color}
-      />
-    );
-  },
-  sceneStyle: {
-    backgroundColor: "#F8F1E7",
-  },
-})}
+          return (
+            <Ionicons
+              name={iconName}
+              size={size}
+              color={color}
+            />
+          );
+        },
+        sceneStyle: {
+          backgroundColor: "#F8F1E7",
+        },
+      })}
     >
       <Tab.Screen
         name="Início"
