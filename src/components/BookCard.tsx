@@ -18,15 +18,22 @@ export default function BookCard({ book, onPress }: BookCardProps) {
   const { isFavorite } = useFavorites();
   const favorite = isFavorite(book.id);
 
+  const authorText = book.authors.join(", ") || "Autor não informado";
+
+  const yearText = book.firstPublishYear
+    ? `Publicado em ${book.firstPublishYear}`
+    : "Ano não informado";
+
   return (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.75}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Ver detalhes de ${book.title}${
-        favorite ? ", nos favoritos" : ""
-      }`}
+      accessibilityLabel={`${book.title}. ${authorText}. ${yearText}.${
+        favorite ? " Livro nos favoritos." : ""
+      } Ver detalhes do livro.`}
+      accessibilityHint="Abre a página com mais informações sobre este livro"
     >
       <View style={styles.coverContainer}>
         {book.coverUrl ? (
@@ -34,10 +41,13 @@ export default function BookCard({ book, onPress }: BookCardProps) {
             source={{ uri: book.coverUrl }}
             style={styles.cover}
             resizeMode="cover"
-            accessibilityLabel={`Capa do livro ${book.title}`}
+            accessible={false}
           />
         ) : (
-          <View style={[styles.cover, styles.noCover]}>
+          <View
+            style={[styles.cover, styles.noCover]}
+            accessible={false}
+          >
             <Text style={styles.noCoverIcon}>📚</Text>
             <Text style={styles.noCoverText}>Sem capa</Text>
           </View>
@@ -46,9 +56,7 @@ export default function BookCard({ book, onPress }: BookCardProps) {
         {favorite && (
           <View
             style={styles.favoriteBadge}
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel="Livro favoritado"
+            accessible={false}
           >
             <Text style={styles.favoriteIcon}>♥</Text>
           </View>
@@ -60,13 +68,11 @@ export default function BookCard({ book, onPress }: BookCardProps) {
       </Text>
 
       <Text style={styles.author} numberOfLines={2}>
-        {book.authors.join(", ") || "Autor não informado"}
+        {authorText}
       </Text>
 
       <Text style={styles.year}>
-        {book.firstPublishYear
-          ? `Publicado em ${book.firstPublishYear}`
-          : "Ano não informado"}
+        {yearText}
       </Text>
     </TouchableOpacity>
   );
@@ -108,9 +114,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",

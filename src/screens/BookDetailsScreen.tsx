@@ -179,6 +179,10 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
           onPress={() => navigation.replace("BookDetails", { bookId })}
           accessibilityRole="button"
           accessibilityLabel="Tentar carregar os detalhes novamente"
+          accessibilityState={{
+  disabled: savingReading,
+  busy: savingReading,
+}}
         >
           <Text style={styles.readButtonText}>Tentar novamente</Text>
         </TouchableOpacity>
@@ -222,8 +226,12 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
         accessibilityRole="button"
         accessibilityLabel={
           favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
+          
         }
-        accessibilityState={{ selected: favorite }}
+        accessibilityState={{
+  disabled: savingReading,
+  busy: savingReading,
+}}
       >
         <Text
           style={[
@@ -253,14 +261,19 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
         >
           {[1, 2, 3, 4, 5].map((rating) => (
             <TouchableOpacity
-              key={rating}
-              onPress={() => setSelectedRating(rating)}
-              accessibilityRole="radio"
-              accessibilityLabel={`${rating} ${
-                rating === 1 ? "estrela" : "estrelas"
-              }`}
-              accessibilityState={{ selected: selectedRating === rating }}
-              style={styles.starButton}
+key={rating}
+onPress={() => setSelectedRating(rating)}
+accessibilityRole="radio"
+accessibilityLabel={`${rating} ${
+  rating === 1 ? "estrela" : "estrelas"
+}`}
+accessibilityState={{
+  disabled: savingReading,
+  busy: savingReading,
+}}
+accessibilityHint="Seleciona esta nota para avaliar o livro"
+hitSlop={4}
+style={styles.starButton}
             >
               <Text
                 style={[
@@ -282,22 +295,38 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
 
         {alreadyRead ? (
           <TouchableOpacity
-            style={styles.readButton}
-            onPress={() => void handleUpdateRating()}
-            disabled={savingReading || selectedRating === savedRating}
-            accessibilityRole="button"
-          >
+  style={styles.readButton}
+  onPress={() => void handleUpdateRating()}
+  disabled={savingReading || selectedRating === savedRating}
+  accessibilityRole="button"
+  accessibilityLabel={
+    savingReading ? "Salvando nova nota" : "Salvar nova nota"
+  }
+  accessibilityHint="Atualiza a avaliação deste livro"
+  accessibilityState={{
+    disabled: savingReading || selectedRating === savedRating,
+    busy: savingReading,
+  }}
+>
             <Text style={styles.readButtonText}>
               {savingReading ? "Salvando..." : "Salvar nova nota"}
             </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={styles.readButton}
-            onPress={() => void handleReadingAction()}
-            disabled={savingReading}
-            accessibilityRole="button"
-          >
+  style={styles.readButton}
+  onPress={() => void handleReadingAction()}
+  disabled={savingReading}
+  accessibilityRole="button"
+  accessibilityLabel={
+    savingReading ? "Salvando leitura" : "Marcar livro como lido"
+  }
+  accessibilityHint="Adiciona este livro à sua lista de livros lidos após selecionar uma nota"
+  accessibilityState={{
+    disabled: savingReading,
+    busy: savingReading,
+  }}
+>
             <Text style={styles.readButtonText}>
               {savingReading ? "Salvando..." : "✓ Marcar como lido"}
             </Text>
@@ -312,10 +341,13 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
 
         {alreadyRead && (
           <TouchableOpacity
-            style={styles.removeReadButton}
-            onPress={() => void handleReadingAction()}
-            accessibilityRole="button"
-          >
+  style={styles.removeReadButton}
+  onPress={() => void handleReadingAction()}
+  accessibilityRole="button"
+  accessibilityLabel="Remover livro dos lidos"
+  accessibilityHint="Remove o registro de leitura e a avaliação deste livro"
+  hitSlop={8}
+>
             <Text style={styles.removeReadText}>
               Remover dos livros lidos
             </Text>
@@ -460,6 +492,11 @@ const styles = StyleSheet.create({
   starButton: {
     paddingHorizontal: 4,
     paddingVertical: 4,
+      minWidth: 44,
+  minHeight: 44,
+  alignItems: "center",
+  justifyContent: "center",
+
   },
   star: {
     fontSize: 38,
@@ -493,9 +530,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   removeReadButton: {
-    marginTop: 14,
-    padding: 8,
-  },
+  marginTop: 14,
+  padding: 8,
+  minHeight: 44,
+  justifyContent: "center",
+  alignItems: "center",
+},
   removeReadText: {
     color: "#A32626",
     fontSize: 14,
