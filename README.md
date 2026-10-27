@@ -122,6 +122,7 @@ A autenticação é local ao aplicativo e não representa uma conta hospedada em
 - **Bruno Viccenzo Mazetto**
 - **Helen Lauren Bonato**
 - **Leticia Bastias Fabri**
+- **Rafael Cesar de Sene**
 
 ## Contexto acadêmico
 
