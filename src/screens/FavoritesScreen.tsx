@@ -8,13 +8,28 @@ import {
 } from "react-native";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { Book } from "../types/Book";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../navigation/AppNavigator";
 
 export default function FavoritesScreen() {
   const { favorites, isLoading, toggleFavorite } = useFavorites();
+  const navigation =
+  useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+function openBookDetails(bookId: string) {
+  navigation.navigate("BookDetails", { bookId });
+}
 
   function renderBook({ item }: { item: Book }) {
     return (
-      <View style={styles.bookCard}>
+      <TouchableOpacity
+  style={styles.bookCard}
+  activeOpacity={0.8}
+  onPress={() => openBookDetails(item.id)}
+  accessibilityRole="button"
+  accessibilityLabel={`Ver detalhes de ${item.title}`}
+>
         {item.coverUrl ? (
           <Image
             source={{ uri: item.coverUrl }}
@@ -37,7 +52,10 @@ export default function FavoritesScreen() {
 
           <TouchableOpacity
             style={styles.removeButton}
-            onPress={() => void toggleFavorite(item)}
+            onPress={(event) => {
+  event.stopPropagation();
+  void toggleFavorite(item);
+}}
             accessibilityRole="button"
             accessibilityLabel={`Remover ${item.title} dos favoritos`}
           >
@@ -46,7 +64,7 @@ export default function FavoritesScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 

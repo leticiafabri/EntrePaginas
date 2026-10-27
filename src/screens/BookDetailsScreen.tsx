@@ -37,7 +37,6 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
   const savedRating = book ? getRating(book.id) : undefined;
 
   const [description, setDescription] = useState("");
-  const [loadingDescription, setLoadingDescription] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -78,37 +77,6 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
     setSelectedRating(savedRating ?? 0);
   }, [bookId, savedRating]);
 
-  useEffect(() => {
-    if (!book || book.description) {
-      return;
-    }
-
-    let active = true;
-
-    async function loadDescription() {
-      setLoadingDescription(true);
-
-      try {
-        const result = await getBookDetails(book!.id);
-
-        if (active && result.description) {
-          setDescription(result.description);
-        }
-      } catch {
-        // A descrição é opcional.
-      } finally {
-        if (active) {
-          setLoadingDescription(false);
-        }
-      }
-    }
-
-    void loadDescription();
-
-    return () => {
-      active = false;
-    };
-  }, [book]);
 
   async function handleReadingAction() {
     if (!book) {
@@ -370,14 +338,10 @@ export default function BookDetailsScreen({ route, navigation }: Props) {
       <View style={styles.descriptionSection}>
         <Text style={styles.sectionTitle}>Sobre o livro</Text>
 
-        {loadingDescription ? (
-          <ActivityIndicator color="#702D3A" />
-        ) : (
-          <Text style={styles.description}>
-            {description ||
-              "Ainda não há uma descrição disponível para este livro."}
-          </Text>
-        )}
+        <Text style={styles.description}>
+  {description ||
+    "Ainda não há uma descrição disponível para este livro."}
+</Text>
       </View>
     </ScrollView>
   );

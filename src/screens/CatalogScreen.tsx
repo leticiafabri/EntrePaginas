@@ -33,7 +33,8 @@ const PAGE_SIZE = 20;
 export default function CatalogScreen() {
   const navigation = useNavigation<CatalogNavigationProp>();
 
-  const [query, setQuery] = useState("Harry Potter");
+  const [query, setQuery] = useState("");
+  const [activeQuery, setActiveQuery] = useState("the");
   const [books, setBooks] = useState<Book[]>([]);
   const [page, setPage] = useState(1);
   const [totalBooks, setTotalBooks] = useState(0);
@@ -49,6 +50,7 @@ export default function CatalogScreen() {
 
   const loadBooks = useCallback(async (searchTerm: string) => {
     const trimmedQuery = searchTerm.trim();
+    setActiveQuery(trimmedQuery);
 
     if (!trimmedQuery) {
       setBooks([]);
@@ -82,8 +84,8 @@ export default function CatalogScreen() {
   }, []);
 
   useEffect(() => {
-    void loadBooks("Harry Potter");
-  }, [loadBooks]);
+  void loadBooks("subject:fiction");
+}, [loadBooks]);
 
   async function loadMoreBooks() {
     if (loading || loadingMore || refreshing || !hasMore || books.length === 0) {
@@ -96,7 +98,7 @@ export default function CatalogScreen() {
     setLoadMoreError("");
 
     try {
-      const result = await searchBooks(query.trim(), nextPage, PAGE_SIZE);
+      const result = await searchBooks(activeQuery, nextPage, PAGE_SIZE);
 
       setBooks((currentBooks) => {
         const existingIds = new Set(currentBooks.map((book) => book.id));
@@ -121,12 +123,7 @@ export default function CatalogScreen() {
       return;
     }
 
-    const trimmedQuery = query.trim();
-
-    if (!trimmedQuery) {
-      setError("Digite um título ou autor para pesquisar.");
-      return;
-    }
+    const trimmedQuery = activeQuery;
 
     setRefreshing(true);
     setError("");
@@ -239,10 +236,10 @@ export default function CatalogScreen() {
         <View style={styles.messageContainer}>
           <Text style={styles.error}>{error}</Text>
 
-          {query.trim().length > 0 && (
+          {activeQuery.length > 0 && (
             <TouchableOpacity
               style={styles.retryButton}
-              onPress={() => void loadBooks(query)}
+              onPress={() => void loadBooks(activeQuery)}
               accessibilityRole="button"
               accessibilityLabel="Tentar carregar os livros novamente"
             >

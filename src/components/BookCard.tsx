@@ -7,6 +7,7 @@ import {
 } from "react-native";
 
 import { Book } from "../types/Book";
+import { useFavorites } from "../contexts/FavoritesContext";
 
 interface BookCardProps {
   book: Book;
@@ -14,27 +15,45 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, onPress }: BookCardProps) {
+  const { isFavorite } = useFavorites();
+  const favorite = isFavorite(book.id);
+
   return (
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.75}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Ver detalhes de ${book.title}`}
+      accessibilityLabel={`Ver detalhes de ${book.title}${
+        favorite ? ", nos favoritos" : ""
+      }`}
     >
-      {book.coverUrl ? (
-        <Image
-          source={{ uri: book.coverUrl }}
-          style={styles.cover}
-          resizeMode="cover"
-          accessibilityLabel={`Capa do livro ${book.title}`}
-        />
-      ) : (
-        <View style={[styles.cover, styles.noCover]}>
-          <Text style={styles.noCoverIcon}>📚</Text>
-          <Text style={styles.noCoverText}>Sem capa</Text>
-        </View>
-      )}
+      <View style={styles.coverContainer}>
+        {book.coverUrl ? (
+          <Image
+            source={{ uri: book.coverUrl }}
+            style={styles.cover}
+            resizeMode="cover"
+            accessibilityLabel={`Capa do livro ${book.title}`}
+          />
+        ) : (
+          <View style={[styles.cover, styles.noCover]}>
+            <Text style={styles.noCoverIcon}>📚</Text>
+            <Text style={styles.noCoverText}>Sem capa</Text>
+          </View>
+        )}
+
+        {favorite && (
+          <View
+            style={styles.favoriteBadge}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="Livro favoritado"
+          >
+            <Text style={styles.favoriteIcon}>♥</Text>
+          </View>
+        )}
+      </View>
 
       <Text style={styles.title} numberOfLines={3}>
         {book.title}
@@ -63,6 +82,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E8DCD3",
   },
+  coverContainer: {
+    position: "relative",
+  },
   cover: {
     width: "100%",
     height: 170,
@@ -81,6 +103,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
     textAlign: "center",
+  },
+  favoriteBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoriteIcon: {
+    color: "#702D3A",
+    fontSize: 23,
   },
   title: {
     color: "#702D3A",

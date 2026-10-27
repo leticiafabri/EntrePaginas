@@ -55,6 +55,7 @@ export default function LoginScreen({ navigation }: Props) {
       >
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>EntrePáginas</Text>
+
           <Text style={styles.subtitle}>
             Um lugar para registrar suas leituras.
           </Text>
@@ -62,11 +63,13 @@ export default function LoginScreen({ navigation }: Props) {
 
         <View style={styles.card}>
           <Text style={styles.title}>Bem-vindo de volta!</Text>
+
           <Text style={styles.description}>
             Entre na sua conta para continuar.
           </Text>
 
           <Text style={styles.label}>E-mail</Text>
+
           <TextInput
             style={styles.input}
             placeholder="seu@email.com"
@@ -76,9 +79,12 @@ export default function LoginScreen({ navigation }: Props) {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            accessibilityLabel="E-mail"
+            accessibilityHint="Digite o e-mail cadastrado na sua conta"
           />
 
           <Text style={styles.label}>Senha</Text>
+
           <TextInput
             style={styles.input}
             placeholder="Digite sua senha"
@@ -87,31 +93,49 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setPassword}
             secureTextEntry
             autoCapitalize="none"
+            accessibilityLabel="Senha"
+            accessibilityHint="Digite a senha da sua conta"
           />
 
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityLabel={isSubmitting ? "Entrando na conta" : "Entrar"}
+            accessibilityState={{
+              disabled: isSubmitting,
+              busy: isSubmitting,
+            }}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator
+                color="#FFFFFF"
+                accessibilityLabel="Entrando na conta"
+              />
             ) : (
               <Text style={styles.buttonText}>Entrar</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Ainda não tem uma conta? </Text>
+            <Text style={styles.registerText}>
+              Ainda não tem uma conta?{" "}
+            </Text>
+
             <TouchableOpacity
               onPress={() => navigation.navigate("Register")}
+              accessibilityRole="button"
+              accessibilityLabel="Cadastrar uma nova conta"
             >
               <Text style={styles.registerLink}>Cadastre-se</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <Text style={styles.footer}>Sua próxima leitura começa aqui. </Text>
+        <Text style={styles.footer}>
+          Sua próxima leitura começa aqui.
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -180,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFCF8",
   },
   button: {
-    height: 50,
+    minHeight: 50,
     backgroundColor: "#702D3A",
     borderRadius: 10,
     alignItems: "center",
