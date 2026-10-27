@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Book } from "../types/Book";
 import { searchBooks } from "../services/openLibraryService";
+import BookCard from "../components/BookCard";
 
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
@@ -20,7 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 type RootStackParamList = {
   Catalog: undefined;
   Favorites: undefined;
-  BookDetails: { book: Book };
+  BookDetails: { bookId: string };
 };
 
 type CatalogNavigationProp = NativeStackNavigationProp<
@@ -28,21 +28,48 @@ type CatalogNavigationProp = NativeStackNavigationProp<
   "Catalog"
 >;
 
+const PAGE_SIZE = 20;
 
 export default function CatalogScreen() {
-const navigation = useNavigation<CatalogNavigationProp>();
+  const navigation = useNavigation<CatalogNavigationProp>();
+
   const [query, setQuery] = useState("Harry Potter");
   const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalBooks, setTotalBooks] = useState(0);
 
-  async function loadBooks(searchTerm: string) {
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [error, setError] = useState("");
+  const [loadMoreError, setLoadMoreError] = useState("");
+
+  const hasMore = books.length < totalBooks;
+
+  const loadBooks = useCallback(async (searchTerm: string) => {
+    const trimmedQuery = searchTerm.trim();
+
+    if (!trimmedQuery) {
+      setBooks([]);
+      setTotalBooks(0);
+      setPage(1);
+      setError("Digite um título ou autor para pesquisar.");
+      return;
+    }
+
     setLoading(true);
     setError("");
+    setLoadMoreError("");
+    setBooks([]);
+    setPage(1);
+    setTotalBooks(0);
 
     try {
-      const result = await searchBooks(searchTerm);
+      const result = await searchBooks(trimmedQuery, 1, PAGE_SIZE);
+
       setBooks(result.books);
+      setTotalBooks(result.total);
 
       if (result.books.length === 0) {
         setError("Nenhum livro encontrado. Tente outra pesquisa.");
@@ -52,58 +79,126 @@ const navigation = useNavigation<CatalogNavigationProp>();
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void loadBooks("Harry Potter");
-  }, []);
+  }, [loadBooks]);
+
+  async function loadMoreBooks() {
+    if (loading || loadingMore || refreshing || !hasMore || books.length === 0) {
+      return;
+    }
+
+    const nextPage = page + 1;
+
+    setLoadingMore(true);
+    setLoadMoreError("");
+
+    try {
+      const result = await searchBooks(query.trim(), nextPage, PAGE_SIZE);
+
+      setBooks((currentBooks) => {
+        const existingIds = new Set(currentBooks.map((book) => book.id));
+        const newBooks = result.books.filter(
+          (book) => !existingIds.has(book.id),
+        );
+
+        return [...currentBooks, ...newBooks];
+      });
+
+      setPage(nextPage);
+      setTotalBooks(result.total);
+    } catch {
+      setLoadMoreError("Não foi possível carregar mais livros.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function refreshBooks() {
+    if (refreshing || loading) {
+      return;
+    }
+
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
+      setError("Digite um título ou autor para pesquisar.");
+      return;
+    }
+
+    setRefreshing(true);
+    setError("");
+    setLoadMoreError("");
+
+    try {
+      const result = await searchBooks(trimmedQuery, 1, PAGE_SIZE);
+
+      setBooks(result.books);
+      setTotalBooks(result.total);
+      setPage(1);
+
+      if (result.books.length === 0) {
+        setError("Nenhum livro encontrado. Tente outra pesquisa.");
+      }
+    } catch {
+      setError("Não foi possível atualizar os livros. Tente novamente.");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  function openBookDetails(book: Book) {
+  navigation.navigate("BookDetails", { bookId: book.id });
+}
 
   function renderBook({ item }: { item: Book }) {
-return (
-  <TouchableOpacity
-    style={styles.bookCard}
-    activeOpacity={0.75}
-    onPress={() => navigation.navigate("BookDetails", { book: item })}
-    accessibilityRole="button"
-    accessibilityLabel={`Ver detalhes de ${item.title}`}
-  >
-    {item.coverUrl ? (
-      <Image
-        source={{ uri: item.coverUrl }}
-        style={styles.cover}
-        resizeMode="cover"
-        accessibilityLabel={`Capa do livro ${item.title}`}
+    return (
+      <BookCard
+        book={item}
+        onPress={() => openBookDetails(item)}
       />
-    ) : (
-      <View style={[styles.cover, styles.noCover]}>
-        <Text style={styles.noCoverText}>📚</Text>
-        <Text style={styles.noCoverLabel}>Sem capa</Text>
-      </View>
-    )}
+    );
+  }
 
-    <View style={styles.bookInfo}>
-      <Text style={styles.bookTitle} numberOfLines={3}>
-        {item.title}
-      </Text>
+  function renderListFooter() {
+    if (loadingMore) {
+      return (
+        <ActivityIndicator
+          size="small"
+          color="#702D3A"
+          style={styles.footerLoader}
+          accessibilityLabel="Carregando mais livros"
+        />
+      );
+    }
 
-      <Text style={styles.bookAuthor} numberOfLines={2}>
-        {item.authors.join(", ") || "Autor não informado"}
-      </Text>
+    if (loadMoreError) {
+      return (
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerError}>{loadMoreError}</Text>
 
-      <Text style={styles.bookYear}>
-        {item.firstPublishYear
-          ? `Publicado em ${item.firstPublishYear}`
-          : "Ano não informado"}
-      </Text>
-    </View>
-  </TouchableOpacity>
-);
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => void loadMoreBooks()}
+            accessibilityRole="button"
+            accessibilityLabel="Tentar carregar mais livros novamente"
+          >
+            <Text style={styles.searchButtonText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return null;
   }
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
       <View style={styles.intro}>
         <Text style={styles.heading}>Descubra sua próxima leitura</Text>
+
         <Text style={styles.subtitle}>
           Explore livros do mundo inteiro.
         </Text>
@@ -119,6 +214,7 @@ return (
           accessibilityLabel="Pesquisar livros por título ou autor"
           returnKeyType="search"
           onSubmitEditing={() => void loadBooks(query)}
+          editable={!loading && !refreshing}
         />
 
         <TouchableOpacity
@@ -126,6 +222,7 @@ return (
           onPress={() => void loadBooks(query)}
           accessibilityRole="button"
           accessibilityLabel="Buscar livros"
+          disabled={loading || refreshing}
         >
           <Text style={styles.searchButtonText}>Buscar</Text>
         </TouchableOpacity>
@@ -141,24 +238,38 @@ return (
       ) : error ? (
         <View style={styles.messageContainer}>
           <Text style={styles.error}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => void loadBooks(query)}
-            accessibilityRole="button"
-          >
-            <Text style={styles.searchButtonText}>Tentar novamente</Text>
-          </TouchableOpacity>
+
+          {query.trim().length > 0 && (
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => void loadBooks(query)}
+              accessibilityRole="button"
+              accessibilityLabel="Tentar carregar os livros novamente"
+            >
+              <Text style={styles.searchButtonText}>Tentar novamente</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
+          key="books-grid"
           data={books}
           keyExtractor={(item) => item.id}
           renderItem={renderBook}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          onEndReached={() => void loadMoreBooks()}
+          onEndReachedThreshold={0.5}
+          refreshing={refreshing}
+          onRefresh={() => void refreshBooks()}
           ListHeaderComponent={
-            <Text style={styles.resultsTitle}>Livros encontrados</Text>
+            <Text style={styles.resultsTitle}>
+              Livros encontrados ({totalBooks.toLocaleString("pt-BR")})
+            </Text>
           }
+          ListFooterComponent={renderListFooter}
         />
       )}
     </SafeAreaView>
@@ -229,53 +340,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
   },
-  bookCard: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E8DCD3",
-    gap: 14,
-  },
-  cover: {
-    width: 90,
-    height: 132,
-    borderRadius: 6,
-    backgroundColor: "#E8DCD3",
-  },
-  noCover: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  noCoverText: {
-    fontSize: 28,
-  },
-  noCoverLabel: {
-    color: "#66545A",
-    fontSize: 11,
-    marginTop: 4,
-  },
-  bookInfo: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  bookTitle: {
-    color: "#702D3A",
-    fontSize: 16,
-    fontWeight: "bold",
-    lineHeight: 22,
-  },
-  bookAuthor: {
-    color: "#423B3D",
-    fontSize: 14,
-    marginTop: 8,
-  },
-  bookYear: {
-    color: "#66545A",
-    fontSize: 12,
-    marginTop: 8,
+  row: {
+    gap: 12,
   },
   messageContainer: {
     alignItems: "center",
@@ -291,5 +357,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginTop: 16,
+    alignItems: "center",
+  },
+  footerLoader: {
+    paddingVertical: 20,
+  },
+  footerContainer: {
+    alignItems: "center",
+    paddingVertical: 16,
+  },
+  footerError: {
+    color: "#A32626",
+    textAlign: "center",
+    fontSize: 14,
   },
 });

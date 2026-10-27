@@ -17,7 +17,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import { useAuth } from "../contexts/AuthContext";
-import { Book } from "../types/Book";
 
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
@@ -30,7 +29,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
-  BookDetails: { book: Book };
+  BookDetails: { bookId: string };
 };
 
 export type TabParamList = {

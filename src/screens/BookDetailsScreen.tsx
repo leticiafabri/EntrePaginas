@@ -17,44 +17,69 @@ import { useFavorites } from "../contexts/FavoritesContext";
 import { useReadBooks } from "../contexts/ReadBooksContext";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
-type Props = NativeStackScreenProps<
-  RootStackParamList,
-  "BookDetails"
->;
+type Props = NativeStackScreenProps<RootStackParamList, "BookDetails">;
 
-export default function BookDetailsScreen({ route }: Props) {
-  const { book } = route.params;
+export default function BookDetailsScreen({ route, navigation }: Props) {
+  const { bookId } = route.params;
+
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const { isFavorite, toggleFavorite } = useFavorites();
-  const favorite = isFavorite(book.id);
+  const { isRead, getRating, markAsRead, removeReadBook } = useReadBooks();
 
-  const {
-    isRead,
-    getRating,
-    markAsRead,
-    removeReadBook,
-  } = useReadBooks();
-
-  const alreadyRead = isRead(book.id);
-  const savedRating = getRating(book.id);
-
-  const [selectedRating, setSelectedRating] = useState<number>(
-    savedRating ?? 0,
-  );
+  const [selectedRating, setSelectedRating] = useState(0);
   const [savingReading, setSavingReading] = useState(false);
 
-  const [description, setDescription] = useState(
-    book.description ?? "",
-  );
+  const favorite = book ? isFavorite(book.id) : false;
+  const alreadyRead = book ? isRead(book.id) : false;
+  const savedRating = book ? getRating(book.id) : undefined;
+
+  const [description, setDescription] = useState("");
   const [loadingDescription, setLoadingDescription] = useState(false);
 
   useEffect(() => {
-    setSelectedRating(getRating(book.id) ?? 0);
-  }, [book.id, getRating]);
+    let active = true;
+
+    async function loadBook() {
+      setLoading(true);
+      setError("");
+      setBook(null);
+      setDescription("");
+
+      try {
+        const result = await getBookDetails(bookId);
+
+        if (active) {
+          setBook(result);
+          setDescription(result.description ?? "");
+          navigation.setOptions({ title: result.title });
+        }
+      } catch {
+        if (active) {
+          setError("Não foi possível carregar os detalhes do livro.");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadBook();
+
+    return () => {
+      active = false;
+    };
+  }, [bookId, navigation]);
 
   useEffect(() => {
-    if (book.description) {
-      setDescription(book.description);
+    setSelectedRating(savedRating ?? 0);
+  }, [bookId, savedRating]);
+
+  useEffect(() => {
+    if (!book || book.description) {
       return;
     }
 
@@ -64,7 +89,7 @@ export default function BookDetailsScreen({ route }: Props) {
       setLoadingDescription(true);
 
       try {
-        const result = await getBookDetails(book.id);
+        const result = await getBookDetails(book!.id);
 
         if (active && result.description) {
           setDescription(result.description);
@@ -83,9 +108,13 @@ export default function BookDetailsScreen({ route }: Props) {
     return () => {
       active = false;
     };
-  }, [book.id, book.description]);
+  }, [book]);
 
   async function handleReadingAction() {
+    if (!book) {
+      return;
+    }
+
     if (alreadyRead) {
       Alert.alert(
         "Remover livro dos lidos?",
@@ -99,6 +128,7 @@ export default function BookDetailsScreen({ route }: Props) {
               try {
                 await removeReadBook(book.id);
                 setSelectedRating(0);
+                Alert.alert("Livro removido", "O registro de leitura foi removido.");
               } catch {
                 Alert.alert(
                   "Erro",
@@ -137,7 +167,7 @@ export default function BookDetailsScreen({ route }: Props) {
   }
 
   async function handleUpdateRating() {
-    if (!alreadyRead) {
+    if (!book || !alreadyRead) {
       return;
     }
 
@@ -156,6 +186,36 @@ export default function BookDetailsScreen({ route }: Props) {
     } finally {
       setSavingReading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator
+          size="large"
+          color="#702D3A"
+          accessibilityLabel="Carregando detalhes do livro"
+        />
+        <Text style={styles.statusText}>Carregando livro...</Text>
+      </View>
+    );
+  }
+
+  if (error || !book) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.error}>{error || "Livro não encontrado."}</Text>
+
+        <TouchableOpacity
+          style={styles.readButton}
+          onPress={() => navigation.replace("BookDetails", { bookId })}
+          accessibilityRole="button"
+          accessibilityLabel="Tentar carregar os detalhes novamente"
+        >
+          <Text style={styles.readButtonText}>Tentar novamente</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -193,10 +253,9 @@ export default function BookDetailsScreen({ route }: Props) {
         onPress={() => void toggleFavorite(book)}
         accessibilityRole="button"
         accessibilityLabel={
-          favorite
-            ? "Remover dos favoritos"
-            : "Adicionar aos favoritos"
+          favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"
         }
+        accessibilityState={{ selected: favorite }}
       >
         <Text
           style={[
@@ -204,9 +263,7 @@ export default function BookDetailsScreen({ route }: Props) {
             favorite && styles.favoriteButtonTextActive,
           ]}
         >
-          {favorite
-            ? "♥ Remover dos favoritos"
-            : "♡ Adicionar aos favoritos"}
+          {favorite ? "♥ Remover dos favoritos" : "♡ Adicionar aos favoritos"}
         </Text>
       </TouchableOpacity>
 
@@ -234,9 +291,7 @@ export default function BookDetailsScreen({ route }: Props) {
               accessibilityLabel={`${rating} ${
                 rating === 1 ? "estrela" : "estrelas"
               }`}
-              accessibilityState={{
-                selected: selectedRating === rating,
-              }}
+              accessibilityState={{ selected: selectedRating === rating }}
               style={styles.starButton}
             >
               <Text
@@ -276,9 +331,7 @@ export default function BookDetailsScreen({ route }: Props) {
             accessibilityRole="button"
           >
             <Text style={styles.readButtonText}>
-              {savingReading
-                ? "Salvando..."
-                : "✓ Marcar como lido"}
+              {savingReading ? "Salvando..." : "✓ Marcar como lido"}
             </Text>
           </TouchableOpacity>
         )}
@@ -339,6 +392,24 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 36,
     alignItems: "center",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#F8F1E7",
+  },
+  statusText: {
+    color: "#66545A",
+    fontSize: 15,
+    marginTop: 12,
+  },
+  error: {
+    color: "#A32626",
+    textAlign: "center",
+    fontSize: 15,
+    marginBottom: 16,
   },
   cover: {
     width: 190,
