@@ -48,40 +48,35 @@ export default function CatalogScreen() {
 
   const hasMore = books.length < totalBooks;
 
-  const loadBooks = useCallback(async (searchTerm: string) => {
-    const trimmedQuery = searchTerm.trim();
-    setActiveQuery(trimmedQuery);
+const loadBooks = useCallback(async (searchTerm: string) => {
+  const trimmedQuery = searchTerm.trim();
 
-    if (!trimmedQuery) {
-      setBooks([]);
-      setTotalBooks(0);
-      setPage(1);
-      setError("Digite um título ou autor para pesquisar.");
-      return;
+  // Se a pesquisa estiver vazia, volta ao catálogo inicial.
+  const queryToLoad = trimmedQuery || "subject:fiction";
+
+  setActiveQuery(queryToLoad);
+  setLoading(true);
+  setError("");
+  setLoadMoreError("");
+  setBooks([]);
+  setPage(1);
+  setTotalBooks(0);
+
+  try {
+    const result = await searchBooks(queryToLoad, 1, PAGE_SIZE);
+
+    setBooks(result.books);
+    setTotalBooks(result.total);
+
+    if (result.books.length === 0) {
+      setError("Nenhum livro encontrado. Tente outra pesquisa.");
     }
-
-    setLoading(true);
-    setError("");
-    setLoadMoreError("");
-    setBooks([]);
-    setPage(1);
-    setTotalBooks(0);
-
-    try {
-      const result = await searchBooks(trimmedQuery, 1, PAGE_SIZE);
-
-      setBooks(result.books);
-      setTotalBooks(result.total);
-
-      if (result.books.length === 0) {
-        setError("Nenhum livro encontrado. Tente outra pesquisa.");
-      }
-    } catch {
-      setError("Não foi possível carregar os livros. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  } catch {
+    setError("Não foi possível carregar os livros. Tente novamente.");
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
   void loadBooks("subject:fiction");
@@ -206,7 +201,13 @@ export default function CatalogScreen() {
         <TextInput
           style={styles.input}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={(text) => {
+  setQuery(text);
+
+  if (text.trim() === "" && activeQuery !== "subject:fiction") {
+    void loadBooks("");
+  }
+}}
           placeholder="Pesquise por título ou autor"
           placeholderTextColor="#8A7779"
           accessibilityLabel="Pesquisar livros por título ou autor"
