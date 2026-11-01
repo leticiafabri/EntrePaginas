@@ -113,9 +113,9 @@ A autenticação é local ao aplicativo e não representa uma conta hospedada em
 
 ## Demonstração
 
-🎥 **Vídeo de demonstração:** *link será adicionado após a gravação.*
+🎥 **Vídeo de demonstração:**
 
-> Substitua esta seção pelo link público do vídeo no YouTube quando a gravação estiver disponível.
+> https://www.youtube.com/watch?v=fs9N5gl56aE 
 
 ## Integrantes
 
